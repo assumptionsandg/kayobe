@@ -154,5 +154,23 @@ chrony_ntp_servers:
       - option: maxsources
         val: 2
 
+# Enable firewalld
+controller_firewalld_enabled: true
+controller_firewalld_zones:
+  - zone: test-zone1
+  - zone: test-zone2
+  - zone: test-zone3
+controller_firewalld_default_zone:
+controller_firewalld_rules:
+  - port: 8080/tcp
+    zone: test-zone1
+  - service: http
+    zone: test-zone2
+  - icmp_block: echo-request
+    zone: test-zone3
+  - service: cockpit
+    state: disabled
+    zone: public
+
 # Generate a password for libvirt SASL authentication.
 compute_libvirt_sasl_password: "{% raw %}{{ lookup('password', '/tmp/libvirt-sasl-password') }}{% endraw %}"

@@ -450,12 +450,11 @@ Firewalld
 *tags:*
   | ``firewall``
 
-.. note:: Firewalld is supported on CentOS systems only. Currently no
-          firewall is supported on Ubuntu.
-
-Firewalld can be used to provide a firewall on CentOS systems. Since the Xena
-release, Kayobe provides support for enabling or disabling firewalld, as well
-as defining zones and rules.
+Firewalld can be used to provide a firewall on supported systems. Since the
+Xena release, Kayobe provides support for enabling or disabling firewalld, as
+well as defining zones and rules.
+Since the Zed 13.0.0 release, Kayobe added support for configuring firewalld on
+Ubuntu systems.
 
 The following variables can be used to set whether to enable firewalld:
 
