@@ -37,8 +37,10 @@ roles:
     version: 0.4.1
   - src: stackhpc.mellanox-switch
     version: v1.0.0
-  - src: stackhpc.os-images
-    version: v1.11.0
+  # FIXME: Use v1.15.0 when released.
+  - src: https://github.com/stackhpc/ansible-role-os-images
+    name: stackhpc.os-images
+    version: extra-host-packages
   - src: stackhpc.os-ironic-state
     version: v1.3.1
   - src: stackhpc.os-networks
