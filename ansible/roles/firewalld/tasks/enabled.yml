@@ -1,29 +1,69 @@
 ---
+# Rules:
+# - immediate requires firewalld to be running
+#
+# Cases to consider:
+# 1. firewalld not installed
+#   - install
+#   - enable
+#   - configure permanent
+#   - start
+# 2. firewalld upgraded
+#   - upgrade
+#   - enable
+#   - configure permanent & immediate
+#   - restart if zones change
+#   - configure rules permanent & immediate
+# 3. firewalld installed but not running
+#   - enable
+#   - configure permanent
+#   - start
+# 4. firewalld installed, no zones change
+#   - enable
+#   - configure permanent & immediate
+# 5. firewalld installed, zones change
+#   - enable
+#   - configure permanent & immediate
+#   - restart
+#   - configure permanent & immediate
 - name: Ensure firewalld package is installed
   package:
     name: firewalld
   become: true
+  register: firewalld_install_result
+  notify: Restart or reload firewalld
 
 - name: Ensure firewalld service is enabled
   service:
     name: firewalld
     enabled: true
-    # FIXME: should be possible to configure firewalld offline, but it fails to
-    # apply config.
-    state: started
+  become: true
+
+- name: Check if firewalld is running
+  command:
+    cmd: "systemctl is-active firewalld"
+  changed_when: false
+  failed_when: false
+  register: firewalld_is_active
   become: true
 
 - block:
-    - name: Get firewalld current default zone
+    - name: Get firewalld current default zone (offline)
       command:
         cmd: "firewall-offline-cmd --get-default-zone"
       changed_when: false
       register: current_default_zone
 
-    - name: Set firewalld default zone
+    - name: Set firewalld default zone (offline)
       command: "firewall-offline-cmd --set-default-zone {{ firewalld_default_zone }}"
       when: current_default_zone.stdout != firewalld_default_zone
-      notify: Restart firewalld
+      #notify: Restart or reload firewalld
+
+    - name: Set firewalld default zone (online)
+      command: "firewall-cmd --set-default-zone {{ firewalld_default_zone }}"
+      when:
+        - current_default_zone.stdout != firewalld_default_zone
+        - firewalld_is_active.stdout == 'active'
   become: true
   when:
     - firewalld_default_zone is not none
@@ -31,15 +71,21 @@
 
 - name: Ensure firewalld zones exist
   firewalld:
+    # Zone transactions must not be immediate.
+    immediate: false
     offline: true
     permanent: true
     state: "{{ item.state | default('present') }}"
     zone: "{{ item.zone }}"
   become: true
   loop: "{{ firewalld_zones }}"
+  # If zones change, we need to restart firewalld before applying rules.
+  notify: Restart or reload firewalld
+  register: firewalld_zones_result
 
 - name: Set firewalld zones for network interfaces
   firewalld:
+    immediate: "{{ firewalld_is_active.stdout == 'active' }}"
     interface: "{{ item | net_interface }}"
     offline: true
     permanent: true
@@ -48,17 +94,25 @@
   become: true
   loop: "{{ network_interfaces }}"
   when: item | net_zone
-  notify: Restart firewalld
+  notify: Restart or reload firewalld
+  register: firewalld_interfaces_result
+
+# Run handlers to restart or reload firewalld if zones have changed before
+# applying rules.
+- meta: flush_handlers
+  when:
+    - firewalld_is_active.stdout == 'active'
+    - firewalld_zones_result is changed
 
 - name: Ensure firewalld rules are applied
   firewalld:
     icmp_block: "{{ item.icmp_block | default(omit) }}"
     icmp_block_inversion: "{{ item.icmp_block_inversion | default(omit) }}"
-    immediate: "{{ item.immediate | default(omit) }}"
+    immediate: "{{ firewalld_is_active.stdout == 'active' }}"
     interface: "{{ item.interface | default(omit) }}"
     masquerade: "{{ item.masquerade | default(omit) }}"
-    offline: "{{ item.offline | default(true) }}"
-    permanent: "{{ item.permanent | default(true) }}"
+    offline: true
+    permanent: true
     port: "{{ item.port | default(omit) }}"
     rich_rule: "{{ item.rich_rule | default(omit) }}"
     service: "{{ item.service | default(omit) }}"
@@ -68,4 +122,12 @@
     zone: "{{ item.zone | default(omit) }}"
   become: true
   loop: "{{ firewalld_rules }}"
-  notify: Restart firewalld
+
+- meta: flush_handlers
+
+# Catch the case where firewalld is installed but not running.
+- name: Ensure firewalld service is running
+  service:
+    name: firewalld
+    state: running
+  become: true
