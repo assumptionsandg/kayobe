@@ -1,10 +1,12 @@
 ---
-- name: Restart firewalld
+- name: Restart or reload firewalld
   service:
     name: firewalld
-    state: restarted
+    state: "{% if restart_firewalld %}restarted{% else %}reloaded{% endif %}"
   become: true
+  vars:
+    restart_firewalld: "{{ firewalld_install_result is changed and firewalld_is_active.stdout == 'active' }}"
 
 - name: Check connectivity after firewalld restart
   ping:
-  listen: Restart firewalld
+  listen: Restart or reload firewalld
