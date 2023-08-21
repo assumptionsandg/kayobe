@@ -35,7 +35,7 @@ kolla_ansible_source_url: "https://github.com/assumptionsandg/kolla-ansible"
 
 # Version (branch, tag, etc.) of Kolla Ansible source code repository if type
 # is 'source'. Default is {{ openstack_branch }}.
-kolla_ansible_source_version: "ironic-param-config"
+kolla_ansible_source_version: "ironic-param"
 
 # Path to virtualenv in which to install kolla-ansible.
 kolla_ansible_venv: "{{ lookup('env', 'KOLLA_VENV_PATH') | default(lookup('env', 'PWD') ~ '/venvs/kolla-ansible', true) }}"
