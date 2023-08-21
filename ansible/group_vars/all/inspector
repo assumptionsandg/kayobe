@@ -30,6 +30,9 @@ inspector_ipa_ramdisk_checksum_url: "{{ ipa_ramdisk_checksum_url }}"
 # Algorithm of checksum of Ironic Python Agent (IPA) ramdisk image.
 inspector_ipa_ramdisk_checksum_algorithm: "{{ ipa_ramdisk_checksum_algorithm }}"
 
+# Kolla inspector kernel parameters for the Ironic Python Agent (IPA) ramdisk image.
+kolla_inspector_extra_kernel_params: []
+
 ###############################################################################
 # Ironic inspector processing configuration.
 
