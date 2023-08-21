@@ -424,9 +424,13 @@ ironic_dnsmasq_dhcp_range: "{{ kolla_inspector_dhcp_pool_start }},{{ kolla_inspe
 {% if kolla_inspector_default_gateway %}
 ironic_dnsmasq_default_gateway: {{ kolla_inspector_default_gateway }}
 {% endif %}
-{% if kolla_inspector_extra_kernel_options %}
-ironic_inspector_kernel_cmdline_extras:
-{{ kolla_inspector_extra_kernel_options | to_nice_yaml }}
+{% if kolla_ironic_pxe_append_params_extra %}
+ironic_pxe_append_params_extras:
+{{ ironic_pxe_append_params_extra | to_nice_yaml }}
+{% endif %}
+{% if kolla_inspector_extra_kernel_params %}
+ironic_inspector_kernel_params_extras:
+{{ kolla_inspector_extra_kernel_params | to_nice_yaml }}
 {% endif %}
 # PXE bootloader file for Ironic Inspector, relative to /var/lib/ironic/tftpboot.
 #ironic_dnsmasq_boot_file: "pxelinux.0"
@@ -437,9 +441,6 @@ ironic_inspector_kernel_cmdline_extras:
 # were enabled and opposite
 # Rolling upgrade were enable by default
 #ironic_enable_rolling_upgrade: "yes"
-
-# List of extra kernel parameters passed to the kernel used during inspection
-#ironic_inspector_kernel_cmdline_extras: []
 
 ######################################
 # Manila - Shared File Systems Options

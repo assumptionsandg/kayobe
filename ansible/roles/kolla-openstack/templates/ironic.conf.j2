@@ -27,11 +27,6 @@ default_boot_option = {{ kolla_ironic_default_boot_option }}
 cleaning_network = {{ kolla_ironic_cleaning_network }}
 provisioning_network = {{ kolla_ironic_provisioning_network }}
 
-[pxe]
-{% if kolla_ironic_pxe_append_params %}
-kernel_append_params = {{ kolla_ironic_pxe_append_params | join(' ') }}
-{% endif %}
-
 {% raw %}
 tftp_server = {{ hostvars[inventory_hostname].ansible_facts[api_interface | replace('-', '_')]['ipv4']['address'] }}
 {% endraw %}
